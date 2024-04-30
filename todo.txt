@@ -1,0 +1,5 @@
+4. Mongoose Features:
+- Error Handling:
+ Utilize try-catch blocks to handle database interactions. Provide clear and understandable error messages, like "Product not found".
+
+Should try-error statement encompass if-statement or vice-versa?
