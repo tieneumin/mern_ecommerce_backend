@@ -1,12 +1,19 @@
 const express = require("express");
-const { getCategories } = require("../controllers/category");
+const Product = require("../models/product");
 
 // set up category router
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    res.status(200).send(await getCategories());
+    const categories = [];
+    const products = await Product.find();
+    products.forEach((product) => {
+      if (!categories.includes(product.category)) {
+        categories.push(product.category);
+      }
+    });
+    res.status(200).send(categories);
   } catch (error) {
     res.status(400).send({ message: error.message });
   }
