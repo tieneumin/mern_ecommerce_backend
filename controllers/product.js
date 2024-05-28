@@ -1,30 +1,28 @@
 const Product = require("../models/product");
 
-// Create
-const addProduct = async (name, description, price, category) => {
-  try {
-    const addedProduct = new Product({ name, description, price, category });
-    await addedProduct.save();
-    return addedProduct;
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
 // Read
-const getProducts = async (category) => {
+const getProducts = async (category, page = 1, perPage = 6) => {
   try {
-    // only show X category e.g. Consoles
+    // only show category X e.g. Consoles
     let filters = {};
     if (category) {
       filters.category = category;
     }
     // console.log(filters);
 
-    // sort list by date entered, potentially by category name, price
-    let displayOrder = { _id: -1 };
+    // sort list by latest added
+    let latestAdded = { _id: -1 };
 
-    return await Product.find(filters).sort(displayOrder);
+    /* 
+      Pagination
+      .skip() // skips given amount
+      .limit() // limits items returned
+    */
+    return await Product.find(filters)
+      .populate("category") // same as model prop
+      .skip((page - 1) * perPage)
+      .sort(latestAdded)
+      .limit(perPage);
   } catch (error) {
     throw new Error(error);
   }
@@ -39,12 +37,23 @@ const getProduct = async (id) => {
   }
 };
 
+// Create
+const addProduct = async (name, description, price, category) => {
+  try {
+    const addedProduct = new Product({ name, description, price, category });
+    await addedProduct.save();
+    return addedProduct;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 // Update
-const updateProduct = async (id, name, description, price, category) => {
+const updateProduct = async (id, name, description, price, category, image) => {
   try {
     return await Product.findByIdAndUpdate(
       id,
-      { name, description, price, category },
+      { name, description, price, category, image },
       { new: true }
     );
   } catch (error) {

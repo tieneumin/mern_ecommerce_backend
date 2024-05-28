@@ -6,25 +6,17 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/product");
+const { isAdmin } = require("../middleware/auth");
 
 // set up product router
 const router = express.Router();
 
-// Create
-router.post("/", async (req, res) => {
-  try {
-    const { name, description, price, category } = req.body;
-    res.status(200).send(await addProduct(name, description, price, category));
-  } catch (error) {
-    res.status(400).send({ message: error.message });
-  }
-});
-
 // Read
 router.get("/", async (req, res) => {
   try {
-    // console.log(req);
-    res.status(200).send(await getProducts(req.query.category));
+    // console.log(req.query);
+    const { category, page, perPage } = req.query;
+    res.status(200).send(await getProducts(category, page, perPage));
   } catch (error) {
     res.status(400).send({ message: error.message });
   }
@@ -34,20 +26,42 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     // console.log(req.params);
-    res.status(200).send(await getProduct(req.params.id));
+    const product = await getProduct(req.params.id);
+    if (product) {
+      res.status(200).send(product);
+    } else {
+      res.status(404).send({ message: "Product not found." });
+    }
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+
+// Create
+router.post("/", isAdmin, async (req, res) => {
+  try {
+    const { name, description, price, category } = req.body;
+    res.status(200).send(await addProduct(name, description, price, category));
   } catch (error) {
     res.status(400).send({ message: error.message });
   }
 });
 
 // Update
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAdmin, async (req, res) => {
   try {
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category, image } = req.body;
     res
       .status(200)
       .send(
-        await updateProduct(req.params.id, name, description, price, category)
+        await updateProduct(
+          req.params.id,
+          name,
+          description,
+          price,
+          category,
+          image
+        )
       );
   } catch (error) {
     res.status(400).send({ message: error.message });
@@ -55,11 +69,11 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await deleteProduct(id);
-    res.status(200).send({ message: `Product #${id} has been deleted.` });
+    res.status(200).send({ message: `Product #${id} deleted.` });
   } catch (error) {
     res.status(400).send({ message: error.message });
   }
